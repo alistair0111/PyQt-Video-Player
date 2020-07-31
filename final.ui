@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>QtPlayer</class>
+ <widget class="QMainWindow" name="QtPlayer">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1279</width>
+    <height>778</height>
+   </rect>
+  </property>
+  <property name="font">
+   <font>
+    <weight>75</weight>
+    <italic>false</italic>
+    <bold>true</bold>
+   </font>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <property name="toolButtonStyle">
+   <enum>Qt::ToolButtonIconOnly</enum>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>20</y>
+      <width>1261</width>
+      <height>571</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap>../background.png</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QFrame" name="frame">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>610</y>
+      <width>1251</width>
+      <height>101</height>
+     </rect>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
+    </property>
+    <widget class="QSlider" name="horizontalSlider">
+     <property name="geometry">
+      <rect>
+       <x>280</x>
+       <y>30</y>
+       <width>961</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="playButton">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>30</y>
+       <width>101</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>14</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="statusTip">
+      <string>Play the Video ?</string>
+     </property>
+     <property name="text">
+      <string>Play</string>
+     </property>
+    </widget>
+    <widget class="QRadioButton" name="alternateFrames">
+     <property name="geometry">
+      <rect>
+       <x>110</x>
+       <y>30</y>
+       <width>161</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Play Alternate Frames ?</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="startLabel">
+     <property name="geometry">
+      <rect>
+       <x>270</x>
+       <y>80</y>
+       <width>55</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Start</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="endLabel">
+     <property name="geometry">
+      <rect>
+       <x>1200</x>
+       <y>70</y>
+       <width>51</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>  End</string>
+     </property>
+    </widget>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1279</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuMenu">
+    <property name="title">
+     <string>Menu</string>
+    </property>
+    <addaction name="actionOpen"/>
+    <addaction name="actionRename"/>
+    <addaction name="actionVideo_Info"/>
+    <addaction name="actionExit_Player"/>
+   </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>Edit</string>
+    </property>
+    <addaction name="actionTrim"/>
+    <addaction name="actionMerge"/>
+    <addaction name="actionSave_Frames"/>
+   </widget>
+   <addaction name="menuMenu"/>
+   <addaction name="menuEdit"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionOpen">
+   <property name="text">
+    <string>Open</string>
+   </property>
+   <property name="statusTip">
+    <string>Open A Video</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
+   </property>
+  </action>
+  <action name="actionRename">
+   <property name="text">
+    <string>Rename</string>
+   </property>
+  </action>
+  <action name="actionVideo_Info">
+   <property name="text">
+    <string>Video Info.</string>
+   </property>
+  </action>
+  <action name="actionExit_Player">
+   <property name="text">
+    <string>Exit Player</string>
+   </property>
+  </action>
+  <action name="actionTrim">
+   <property name="text">
+    <string>Trim</string>
+   </property>
+  </action>
+  <action name="actionMerge">
+   <property name="text">
+    <string>Merge</string>
+   </property>
+  </action>
+  <action name="actionSave_Frames">
+   <property name="text">
+    <string>Save Frames</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
