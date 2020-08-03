@@ -5,7 +5,7 @@ from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt, QThread, QFileInfo
 from threading import Timer,Thread,Event
 import numpy as np
-import time, os, sys, cv2, math, datetime
+import time, os, sys, cv2, math, datetime, shutil
 
 screenshots_dir = ("screenshots")
 check_folder = os.path.isdir(screenshots_dir)
@@ -25,9 +25,14 @@ class Ui_QtPlayer(QWidget):
         self.isplaying = False
         self.isalternate = False
         self.isScreenshot = False
-
+        self.pathname = None
+        self.trimFilename = None
+        self.livethread = None
+        self.mergeFilename1 = None
+        self.mergeFilename2 = None
 
     def setupUi(self, QtPlayer):
+
         QtPlayer.setObjectName("QtPlayer")
         QtPlayer.resize(1279, 778)
         icon = QtGui.QIcon()
@@ -45,6 +50,164 @@ class Ui_QtPlayer(QWidget):
         self.centralwidget = QtWidgets.QWidget(QtPlayer)
         self.centralwidget.setObjectName("centralwidget")
 
+
+        #merge Ui
+        self.mergeFrame = QtWidgets.QFrame(self.centralwidget)
+        self.mergeFrame.setGeometry(QtCore.QRect(10, 50, 1261, 711))
+        self.mergeFrame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.mergeFrame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.mergeFrame.setObjectName("mergeFrame")
+        self.heading = QtWidgets.QLabel(self.mergeFrame)
+
+        self.heading.setGeometry(QtCore.QRect(510, 50, 221, 91))
+        font = QtGui.QFont()
+        font.setFamily("Century Schoolbook")
+        font.setPointSize(16)
+        font.setBold(True)
+        font.setItalic(True)
+        font.setWeight(75)
+        self.heading.setFont(font)
+        self.heading.setScaledContents(True)
+        self.heading.setAlignment(QtCore.Qt.AlignCenter)
+        self.heading.setWordWrap(True)
+        self.heading.setObjectName("heading")
+
+        self.file_open1 = QtWidgets.QPushButton(self.mergeFrame)
+        self.file_open1.setGeometry(QtCore.QRect(230, 260, 141, 91))
+        font = QtGui.QFont()
+        font.setPointSize(12)
+        self.file_open1.setFont(font)
+        self.file_open1.setObjectName("file_open1")
+
+        self.file_open2 = QtWidgets.QPushButton(self.mergeFrame)
+        self.file_open2.setGeometry(QtCore.QRect(860, 260, 141, 81))
+        font = QtGui.QFont()
+        font.setPointSize(12)
+        self.file_open2.setFont(font)
+        self.file_open2.setObjectName("file_open2")
+
+        self.video1select = QtWidgets.QLabel(self.mergeFrame)
+        self.video1select.setGeometry(QtCore.QRect(170, 150, 261, 51))
+        font = QtGui.QFont()
+        font.setFamily("Agency FB")
+        font.setPointSize(20)
+        self.video1select.setFont(font)
+        self.video1select.setAlignment(QtCore.Qt.AlignCenter)
+        self.video1select.setObjectName("video1select")
+
+        self.line = QtWidgets.QFrame(self.mergeFrame)
+        self.line.setGeometry(QtCore.QRect(610, 190, 20, 171))
+        self.line.setFrameShape(QtWidgets.QFrame.VLine)
+        self.line.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.line.setObjectName("line")
+
+        self.start_merge = QtWidgets.QPushButton(self.mergeFrame)
+        self.start_merge.setGeometry(QtCore.QRect(510, 400, 221, 81))
+        font = QtGui.QFont()
+        font.setFamily("Algerian")
+        font.setPointSize(15)
+        font.setBold(False)
+        font.setItalic(True)
+        font.setWeight(50)
+        self.start_merge.setFont(font)
+        self.start_merge.setObjectName("start_merge")
+
+        self.video2select = QtWidgets.QLabel(self.mergeFrame)
+        self.video2select.setGeometry(QtCore.QRect(790, 150, 281, 51))
+        font = QtGui.QFont()
+        font.setFamily("Agency FB")
+        font.setPointSize(20)
+        self.video2select.setFont(font)
+        self.video2select.setAlignment(QtCore.Qt.AlignCenter)
+        self.video2select.setObjectName("video2select")
+
+        self.mergeFrame.hide()
+
+        #trimUi
+
+        self.Trimframe = QtWidgets.QFrame(self.centralwidget)
+        self.Trimframe.hide()
+        self.Trimframe.setGeometry(QtCore.QRect(10, 10, 1261, 711))
+        self.Trimframe.setFrameShape(QtWidgets.QFrame.NoFrame)
+        self.Trimframe.setFrameShadow(QtWidgets.QFrame.Plain)
+        self.Trimframe.setLineWidth(2)
+        self.Trimframe.setObjectName("Trimframe")
+
+        self.trimvideo_label = QtWidgets.QLabel(self.Trimframe)
+        self.trimvideo_label.setGeometry(QtCore.QRect(0, 0, 1261, 571))
+        self.trimvideo_label.setText("")
+        self.trimvideo_label.setPixmap(QtGui.QPixmap("Video Trimmer.png"))
+        self.trimvideo_label.setScaledContents(True)
+        self.trimvideo_label.setObjectName("trimvideo_label")
+
+        self.trimmer_starthorizontalSlider = QtWidgets.QSlider(self.Trimframe)
+        self.trimmer_starthorizontalSlider.setGeometry(QtCore.QRect(410, 610, 821, 31))
+        self.trimmer_starthorizontalSlider.setOrientation(QtCore.Qt.Horizontal)
+        self.trimmer_starthorizontalSlider.setTickPosition(QtWidgets.QSlider.TicksBothSides)
+        self.trimmer_starthorizontalSlider.setTickInterval(0)
+        self.trimmer_starthorizontalSlider.setObjectName("trimmer_starthorizontalSlider")
+
+        self.trimVideoSelect = QtWidgets.QPushButton(self.Trimframe)
+        self.trimVideoSelect.setGeometry(QtCore.QRect(30, 600, 110, 41))
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.trimVideoSelect.setFont(font)
+        self.trimVideoSelect.setObjectName("trimVideoSelect")
+
+
+        self.trimmer_endhorizontalSlider = QtWidgets.QSlider(self.Trimframe)
+        self.trimmer_endhorizontalSlider.setGeometry(QtCore.QRect(410, 650, 821, 31))
+        self.trimmer_endhorizontalSlider.setOrientation(QtCore.Qt.Horizontal)
+        self.trimmer_endhorizontalSlider.setTickPosition(QtWidgets.QSlider.TicksBothSides)
+        self.trimmer_endhorizontalSlider.setTickInterval(0)
+        self.trimmer_endhorizontalSlider.setObjectName("trimmer_endhorizontalSlider")
+        self.trimmer_endhorizontalSlider.sliderPressed.connect(self.endChanged)
+        self.trimmer_endhorizontalSlider.sliderReleased.connect(self.endChanged)
+        self.trimmer_endhorizontalSlider.valueChanged.connect(self.endChanged)
+
+        self.startTrimming = QtWidgets.QPushButton(self.Trimframe)
+        self.startTrimming.setGeometry(QtCore.QRect(30, 650, 120, 41))
+        font = QtGui.QFont()
+        font.setPointSize(9)
+        self.startTrimming.setFont(font)
+        self.startTrimming.setObjectName("startTrimming")
+
+        self.selectStartVideo = QtWidgets.QLabel(self.Trimframe)
+        self.selectStartVideo.setGeometry(QtCore.QRect(270, 600, 110, 41))
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.selectStartVideo.setFont(font)
+        self.selectStartVideo.setObjectName("selectStartVideo")
+
+        self.selectEndVideo = QtWidgets.QLabel(self.Trimframe)
+        self.selectEndVideo.setGeometry(QtCore.QRect(270, 650, 110, 41))
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.selectEndVideo.setFont(font)
+        self.selectEndVideo.setObjectName("selectEndVideo")
+        self.startTrimlabel = QtWidgets.QLabel(self.Trimframe)
+
+        self.startTrimlabel.setGeometry(QtCore.QRect(400, 680, 51, 16))
+        font = QtGui.QFont()
+        font.setPointSize(9)
+        self.startTrimlabel.setFont(font)
+        self.startTrimlabel.setObjectName("startTrimlabel")
+
+        self.endTrimlabel = QtWidgets.QLabel(self.Trimframe)
+        self.endTrimlabel.setGeometry(QtCore.QRect(1200, 680, 51, 16))
+        font = QtGui.QFont()
+        font.setPointSize(9)
+        self.endTrimlabel.setFont(font)
+        self.endTrimlabel.setObjectName("endTrimlabel")
+        self.playTrim = QtWidgets.QPushButton(self.Trimframe)
+        self.playTrim.setGeometry(QtCore.QRect(170, 625, 81, 41))
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.playTrim.setFont(font)
+        self.playTrim.setObjectName("playTrim")
+
+        #End trimUi
+
         self.video_label = QtWidgets.QLabel(self.centralwidget)
         self.video_label.setGeometry(QtCore.QRect(10, 10, 1261, 571))
         self.video_label.setText("")
@@ -57,14 +220,14 @@ class Ui_QtPlayer(QWidget):
         sizePolicy.setHeightForWidth(self.video_label.sizePolicy().hasHeightForWidth())
         self.video_label.setSizePolicy(sizePolicy)
 
-        self.frame1 = QtWidgets.QFrame(self.centralwidget)
-        self.frame1.setGeometry(QtCore.QRect(10, 600, 1251, 121))
-        self.frame1.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.frame1.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.frame1.setObjectName("frame1")
+        self.videoPlayerFrame = QtWidgets.QFrame(self.centralwidget)
+        self.videoPlayerFrame.setGeometry(QtCore.QRect(10, 600, 1251, 121))
+        self.videoPlayerFrame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.videoPlayerFrame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.videoPlayerFrame.setObjectName("videoPlayerFrame")
 
 
-        self.horizontalSlider = QtWidgets.QSlider(self.frame1)
+        self.horizontalSlider = QtWidgets.QSlider(self.videoPlayerFrame)
         self.horizontalSlider.setTickPosition(QtWidgets.QSlider.TicksBothSides)
         self.horizontalSlider.setGeometry(QtCore.QRect(320, 30, 930, 41))
         self.horizontalSlider.setOrientation(QtCore.Qt.Horizontal)
@@ -72,12 +235,9 @@ class Ui_QtPlayer(QWidget):
         self.horizontalSlider.setEnabled(False)
         self.horizontalSlider.setMinimum(0)
         self.horizontalSlider.setMaximum(1)
-        self.horizontalSlider.sliderPressed.connect(self.horizontalSliderPressed)
-        self.horizontalSlider.sliderReleased.connect(self.horizontalSliderReleased)
-        self.horizontalSlider.valueChanged.connect(self.sliderValueChanged)
         self.sliderBusy = False
 
-        self.playButton = QtWidgets.QPushButton(self.frame1)
+        self.playButton = QtWidgets.QPushButton(self.videoPlayerFrame)
         self.playButton.setGeometry(QtCore.QRect(0, 30, 75, 41))
         font = QtGui.QFont()
         font.setPointSize(12)
@@ -87,7 +247,7 @@ class Ui_QtPlayer(QWidget):
         self.playButton.setEnabled(False)
         self.playButton.setObjectName("playButton")
 
-        self.pauseButton = QtWidgets.QPushButton(self.frame1)
+        self.pauseButton = QtWidgets.QPushButton(self.videoPlayerFrame)
         self.pauseButton.setGeometry(QtCore.QRect(90, 30, 75, 41))
         font = QtGui.QFont()
         font.setPointSize(12)
@@ -97,7 +257,7 @@ class Ui_QtPlayer(QWidget):
         self.pauseButton.setEnabled(False)
         self.pauseButton.setObjectName("pauseButton")
 
-        self.screenshotButton = QtWidgets.QPushButton(self.frame1)
+        self.screenshotButton = QtWidgets.QPushButton(self.videoPlayerFrame)
         self.screenshotButton.setGeometry(QtCore.QRect(0, 80, 165, 30))
         font = QtGui.QFont()
         font.setPointSize(10)
@@ -107,7 +267,7 @@ class Ui_QtPlayer(QWidget):
         self.screenshotButton.setEnabled(False)
         self.screenshotButton.setObjectName("screenshotButton")
 
-        self.alternateFrames = QtWidgets.QCheckBox(self.frame1)
+        self.alternateFrames = QtWidgets.QCheckBox(self.videoPlayerFrame)
         self.alternateFrames.setGeometry(QtCore.QRect(170, 30, 161, 40))
         font = QtGui.QFont()
         font.setBold(True)
@@ -116,7 +276,7 @@ class Ui_QtPlayer(QWidget):
         self.alternateFrames.setFont(font)
         self.alternateFrames.setObjectName("alternateFrames")
 
-        self.startLabel = QtWidgets.QLabel(self.frame1)
+        self.startLabel = QtWidgets.QLabel(self.videoPlayerFrame)
         self.startLabel.setGeometry(QtCore.QRect(315, 80, 60, 16))
         font = QtGui.QFont()
         font.setPointSize(9)
@@ -125,7 +285,7 @@ class Ui_QtPlayer(QWidget):
         self.startLabel.setFont(font)
         self.startLabel.setObjectName("startLabel")
 
-        self.endLabel = QtWidgets.QLabel(self.frame1)
+        self.endLabel = QtWidgets.QLabel(self.videoPlayerFrame)
         self.endLabel.setGeometry(QtCore.QRect(1190, 70, 60, 20))
         font = QtGui.QFont()
         font.setPointSize(9)
@@ -135,14 +295,14 @@ class Ui_QtPlayer(QWidget):
         self.endLabel.setObjectName("endLabel")
 
 
-        self.frame2 = QtWidgets.QFrame(self.centralwidget)
-        self.frame2.setGeometry(QtCore.QRect(10, 600, 1251, 140))
-        self.frame2.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.frame2.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.frame2.hide()
-        self.frame2.setObjectName("frame2")
+        self.liveFrame = QtWidgets.QFrame(self.centralwidget)
+        self.liveFrame.setGeometry(QtCore.QRect(10, 600, 1251, 140))
+        self.liveFrame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.liveFrame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.liveFrame.hide()
+        self.liveFrame.setObjectName("liveFrame")
 
-        self.startRecordButton = QtWidgets.QPushButton(self.frame2)
+        self.startRecordButton = QtWidgets.QPushButton(self.liveFrame)
         self.startRecordButton.setGeometry(QtCore.QRect(220, 20, 220, 50))
         font = QtGui.QFont()
         font.setPointSize(12)
@@ -152,7 +312,7 @@ class Ui_QtPlayer(QWidget):
         self.startRecordButton.setEnabled(True)
         self.startRecordButton.setObjectName("startRecord")
 
-        self.stopRecordingButton = QtWidgets.QPushButton(self.frame2)
+        self.stopRecordingButton = QtWidgets.QPushButton(self.liveFrame)
         self.stopRecordingButton.setGeometry(QtCore.QRect(500, 20, 220, 50))
         font = QtGui.QFont()
         font.setPointSize(12)
@@ -162,7 +322,7 @@ class Ui_QtPlayer(QWidget):
         self.stopRecordingButton.setEnabled(False)
         self.stopRecordingButton.setObjectName("stopRecordingButton")
 
-        self.liveFeedFolder = QtWidgets.QPushButton(self.frame2)
+        self.liveFeedFolder = QtWidgets.QPushButton(self.liveFrame)
         self.liveFeedFolder.setGeometry(QtCore.QRect(780, 20, 220, 50))
         font = QtGui.QFont()
         font.setPointSize(12)
@@ -193,7 +353,7 @@ class Ui_QtPlayer(QWidget):
         self.actionVideo_Info.setObjectName("actionVideo_Info")
         self.actionVideoPlayer = QtWidgets.QAction(QtPlayer)
         self.actionVideoPlayer.setObjectName("actionVideoPlayer")
-        self.actionVideoPlayer.setEnabled(False)
+        self.actionVideoPlayer.setEnabled(True)
         self.actionLiveFeed = QtWidgets.QAction(QtPlayer)
         self.actionLiveFeed .setObjectName("actionLiveFeed")
         self.actionExit_Player = QtWidgets.QAction(QtPlayer)
@@ -232,9 +392,210 @@ class Ui_QtPlayer(QWidget):
         self.startRecordButton.clicked.connect(lambda: self.onStartRecord())
         self.stopRecordingButton.clicked.connect(lambda: self.onStopRecord())
         self.liveFeedFolder.clicked.connect(lambda: self.onLiveFeedFolder())
+        self.trimmer_starthorizontalSlider.sliderPressed.connect(self.startChanged)
+        self.trimmer_starthorizontalSlider.sliderReleased.connect(self.startChanged)
+        self.trimmer_starthorizontalSlider.valueChanged.connect(self.startChanged)
+        self.horizontalSlider.sliderPressed.connect(self.horizontalSliderPressed)
+        self.horizontalSlider.sliderReleased.connect(self.horizontalSliderReleased)
+        self.horizontalSlider.valueChanged.connect(self.sliderValueChanged)
+        self.actionTrim.triggered.connect(lambda: self.onTrimSelect())
+        self.trimVideoSelect.clicked.connect(lambda: self.onSelectTrimVideo())
+        self.playTrim.clicked.connect(lambda: self.onPlay())
+        self.startTrimming.clicked.connect(lambda : self.onStartTrim())
+        self.actionMerge.triggered.connect(lambda: self.onMerge())
+        self.file_open1.clicked.connect(lambda: self.onVideo1Select())
+        self.file_open2.clicked.connect(lambda: self.onVideo2Select())
+        self.start_merge.clicked.connect(lambda: self.onStartMerge())
 
         self.retranslateUi(QtPlayer)
         QtCore.QMetaObject.connectSlotsByName(QtPlayer)
+
+
+
+
+#all merge functions
+    def onMerge(self):
+        self.Trimframe.hide()
+        self.video_label.hide()
+        self.videoPlayerFrame.hide()
+        self.mergeFrame.show()
+        self.actionOpen.setEnabled(False)
+        self.start_merge.setEnabled(False)
+
+    def onVideo1Select(self):
+        try:
+            self.mergeFilename1, _ = QFileDialog.getOpenFileName(self, "Open Video to Merge",directory=QtCore.QDir.currentPath())
+            self.video1select.setText("Video1 Selected")
+            self.enableMerge()
+        except:
+            self.onError("SomeError Occured")
+
+    def onVideo2Select(self):
+        try:
+            self.mergeFilename2, _ = QFileDialog.getOpenFileName(self, "Open Video to Merge",directory=QtCore.QDir.currentPath())
+            self.video2select.setText("Video2 Selected")
+            self.enableMerge()
+        except:
+            self.onError("SomeError Occured")
+
+    def enableMerge(self):
+        if self.mergeFilename2 is not None and self.mergeFilename2 is not None:
+            self.start_merge.setEnabled(True)
+
+    def onMergeComplete(self):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Information)
+        msg.setText("Merging Successful")
+        msg.exec_()
+
+    def onStartMerge(self):
+        cap = cv2.VideoCapture(self.mergeFilename1)
+        # cap1 = cv2.VideoCapture(self.mergeFilename2)
+        ret, frame = cap.read()
+        i = 1
+        # ret1, frame1 = cap1.read()
+        out = cv2.VideoWriter('Mergeoutput.avi', cv2.VideoWriter_fourcc(*'XVID'), cap.get(cv2.CAP_PROP_FPS), (frame.shape[1],frame.shape[0]))
+        while(cap.isOpened()):
+        #     ret, frame = cap.read()
+        #     ret1, frame1 = cap1.read()
+        #     if ret and ret1: 
+        #         h,w,c = frame.shape;
+        #         h1,w1,c1 = frame1.shape;
+        #         if h != h1 or w != w1: # resize right img to left size
+        #             frame1 = cv2.resize(frame1,(w,h))
+        #         both = np.concatenate((frame, frame1), axis=1)
+        #         out.write(both)
+        #     else: 
+        #         break
+        # while(cap.isOpened()):
+            ret, frame = cap.read()
+            if frame is None:
+                if i>=2:
+                    break
+                i+=1
+                print ("end of video " +  " 2nd.. next one now")
+                if i == 2:
+                    cap = cv2.VideoCapture(self.mergeFilename2)
+                ret, frame = cap.read()
+            out.write(frame)
+
+        cap.release()
+        out.release()
+        self.onMergeComplete()
+
+
+#end of merge functions
+
+
+
+
+
+#Trim related Functions
+
+    def onTrimSelect(self):
+        if isinstance(self.livethread, LiveVideoThread):
+            self.livethread.isLive = False
+        self.liveFrame.hide()
+        self.actionVideoPlayer.setEnabled(True)
+        self.video_label.hide()
+        self.videoPlayerFrame.hide()
+        self.Trimframe.show()
+        self.Trimframe.setEnabled(True)
+        self.trimmer_endhorizontalSlider.setEnabled(False)
+        self.trimmer_starthorizontalSlider.setEnabled(False)
+        self.startTrimming.setEnabled(False)
+        self.startTrimlabel.setEnabled(False)
+        self.endTrimlabel.setEnabled(False)
+        self.selectStartVideo.setEnabled(False)
+        self.selectEndVideo.setEnabled(False)
+        self.playTrim.setEnabled(False)
+
+    def onSelectTrimVideo(self):
+
+        self.trimFilename, _ = QFileDialog.getOpenFileName(self, "Open Video to Trim",directory=QtCore.QDir.currentPath())
+        print(self.trimFilename)
+        if self.trimFilename is not None and self.trimFilename != "":
+            self.trimThread = TrimVideoThread(self.trimFilename)
+            self.trimmer_starthorizontalSlider.setMaximum(self.trimThread.endFrame)
+            self.trimmer_endhorizontalSlider.setMaximum(self.trimThread.endFrame)
+            self.trimmer_endhorizontalSlider.setValue(self.trimThread.endFrame)
+            self.trimmer_starthorizontalSlider.setEnabled(True)
+            self.trimmer_endhorizontalSlider.setEnabled(True)
+            self.startTrimming.setEnabled(True)
+            self.startTrimlabel.setEnabled(True)
+            self.endTrimlabel.setEnabled(True)
+            self.selectStartVideo.setEnabled(True)
+            self.selectEndVideo.setEnabled(True)
+            self.playTrim.setEnabled(True)
+            self.trimThread.change_pixmap_trim.connect(self.update_Trimvideoimage)
+            self.trimThread.start()
+        else:
+            self.trimmer_starthorizontalSlider.setEnabled(False)
+            self.trimmer_endhorizontalSlider.setEnabled(False)
+            self.startTrimming.setEnabled(False)
+            self.startTrimlabel.setEnabled(False)
+            self.endTrimlabel.setEnabled(False)
+            self.selectStartVideo.setEnabled(False)
+            self.selectEndVideo.setEnabled(False)
+            self.playTrim.setEnabled(False)
+            self.onError("Some Error Occured")
+
+    def startChanged(self):
+        startValue = self.trimmer_starthorizontalSlider.value()
+        endValue = self.trimmer_endhorizontalSlider.value()
+        self.trimThread.startTrimFrame = startValue
+        self.trimThread.frameId = startValue
+        self.trimThread.framePosUpdated = True
+        print("startValue",startValue)
+        if(startValue >= endValue):
+            self.trimmer_endhorizontalSlider.setValue(startValue)
+            self.trimThread.endTrimFrame = endValue
+    
+    def endChanged(self):
+        startValue = self.trimmer_starthorizontalSlider.value()
+        endValue = self.trimmer_endhorizontalSlider.value()
+        self.trimThread.endTrimFrame = endValue
+        if(endValue <= startValue):
+            self.trimmer_endhorizontalSlider.setValue(startValue)
+            self.trimThread.startTrimFrame = startValue
+        
+
+    def update_Trimvideoimage(self, cv_img):
+        """Updates the image_label with a new opencv image"""
+        qt_img = self.convert_cv_qt(cv_img)
+        self.trimvideo_label.setScaledContents(True)
+        self.trimvideo_label.setPixmap(qt_img)
+        if self.trimThread.frameId>=self.trimThread.endTrimFrame-1:
+            time.sleep(1)
+            self.onTrimOpEnd()
+
+    def onPlay(self):
+        self.trimThread.isPlay = True if (self.trimThread.isPlay == False) else False
+        if self.trimThread.isPlay == True:
+            self.playTrim.setText("Pause")
+        else:
+            self.playTrim.setText("Play")
+
+    def onTrimOpEnd(self):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Information)
+        msg.setText("Trimming Successful")
+        msg.exec_()
+        self.trimvideo_label.setPixmap(QtGui.QPixmap("Video Trimmer.png"))
+    
+    def onStartTrim(self):
+        self.trimmer_starthorizontalSlider.setEnabled(False)
+        self.trimmer_endhorizontalSlider.setEnabled(False)
+        self.playTrim.setEnabled(False)
+        self.trimThread.isPlay = False
+        self.trimThread.isTrim = True
+        date = datetime.datetime.now()
+        self.trimThread.out = cv2.VideoWriter('Trimmed_Video_%s-%s-%sT%s-%s-%s.avi'%(date.year,date.month,date.day,date.hour,date.minute,date.second), self.trimThread.fourcc, self.trimThread.fps, (self.trimThread.cv_img.shape[1], self.trimThread.cv_img.shape[0]))
+        
+
+    
+#end of trim functions
+
 
 
     def onError(self, error):
@@ -328,12 +689,15 @@ class Ui_QtPlayer(QWidget):
         # print("ValueChanged",frame)
 
     def onLiveFeedMode(self):
+        self.mergeFrame.hide()
+        self.Trimframe.hide()
+        self.video_label.show()
         self.actionOpen.setEnabled(False)
         self.actionVideoPlayer.setEnabled(True)
         self.actionLiveFeed.setEnabled(False)
         time.sleep(1.5)
-        self.frame1.hide()
-        self.frame2.show()
+        self.videoPlayerFrame.hide()
+        self.liveFrame.show()
         self.livethread = LiveVideoThread()
         self.livethread.change_pixmap.connect(self.update_livevideoimage)
         self.livethread.start()
@@ -348,14 +712,21 @@ class Ui_QtPlayer(QWidget):
  
 
     def onVideoPlayerMode(self):
-        self.livethread.isLive = False
-        self.actionLiveFeed.setEnabled(True)
-        self.actionOpen.setEnabled(True)
-        self.actionLiveFeed.setEnabled(True)
-        time.sleep(1.5)
-        self.frame2.hide()
-        self.frame1.show()
-
+        try:
+            if isinstance(self.livethread, LiveVideoThread):
+                self.livethread.isLive = False
+            self.Trimframe.hide()
+            self.video_label.show()
+            self.mergeFrame.hide()
+            self.actionMerge.setEnabled(True)
+            self.actionLiveFeed.setEnabled(True)
+            self.actionOpen.setEnabled(True)
+            self.actionVideoPlayer.setEnabled(True)
+            time.sleep(1.5)
+            self.liveFrame.hide()
+            self.videoPlayerFrame.show()
+        except:
+            self.onError("Some Error Occured")
 
     def onStartRecord(self):
         self.startRecordButton.setEnabled(False)
@@ -366,8 +737,9 @@ class Ui_QtPlayer(QWidget):
             self.livethread.out = cv2.VideoWriter('Video_%s-%s-%sT%s-%s-%s.avi'%(date.year,date.month,date.day,date.hour,date.minute,date.second), self.livethread.fourcc, 15, (640, 480))
             print("1")
         else:
-            pathname = self.livethread.filepath+"/Video_%s-%s-%sT%s:%s:%s.avi"%(date.year,date.month,date.day,date.hour,date.minute,date.second)
-            self.livethread.out = cv2.VideoWriter(pathname, self.livethread.fourcc, 15, (640, 480))
+            self.pathname = "Video_%s-%s-%sT%s:%s:%s.avi"%(date.year,date.month,date.day,date.hour,date.minute,date.second)
+            print(self.pathname)
+            self.livethread.out = cv2.VideoWriter(self.pathname, self.livethread.fourcc, 15, (640, 480))
         self.livethread.isRecord = True
         self.statusbar.showMessage("Recording Started")
     
@@ -376,6 +748,9 @@ class Ui_QtPlayer(QWidget):
         self.stopRecordingButton.setEnabled(False)
         self.liveFeedFolder.setEnabled(True)
         self.livethread.isRecord = False
+        time.sleep(1)
+        if self.livethread.filepath is not None:
+            shutil.move(self.pathname, self.livethread.filepath)
         self.livethread.filepath = None
         self.statusbar.showMessage("Recording Stopped")
 
@@ -416,7 +791,7 @@ class Ui_QtPlayer(QWidget):
     def open_file(self):
         try:
             self.actionLiveFeed.setEnabled(False)
-            self.frame1.setEnabled(True)
+            self.videoPlayerFrame.setEnabled(True)
             self.alternateFrames.setChecked(False)
             self.screenshotButton.setEnabled(False)
             self.actionRename.setEnabled(False)
@@ -445,6 +820,19 @@ class Ui_QtPlayer(QWidget):
                 self.thread.start()    
             else:
                 self.onError("Select suitable video file.")
+                self.playButton.setEnabled(False)
+                self.actionOpen.setEnabled(True)
+                self.pauseButton.setEnabled(False)
+                self.alternateFrames.setEnabled(False)
+                self.alternateFrames.setChecked(False)
+                self.screenshotButton.setEnabled(False)
+                self.actionSave_Frames.setEnabled(False)
+                self.horizontalSlider.setEnabled(False)
+                self.actionVideo_Info.setEnabled(False)
+                self.actionRename.setEnabled(True)
+                self.actionLiveFeed.setEnabled(True)
+                self.actionVideoPlayer.setEnabled(False)
+                self.endLabel.setText("-- : -- : --")
         except Exception as e:
             self.onError("Try Again")
 
@@ -489,6 +877,21 @@ class Ui_QtPlayer(QWidget):
         self.actionTrim.setText(_translate("QtPlayer", "Trim"))
         self.actionMerge.setText(_translate("QtPlayer", "Merge"))
         self.actionSave_Frames.setText(_translate("QtPlayer", "Save Frames"))
+        self.heading.setText(_translate("QtPlayer", "QT Video Merger"))
+        self.file_open1.setText(_translate("QtPlayer", "Open File"))
+        self.file_open2.setText(_translate("QtPlayer", "Open File"))
+        self.video1select.setText(_translate("QtPlayer", "Select Video 1"))
+        self.start_merge.setText(_translate("QtPlayer", "Start Merging!"))
+        self.video2select.setText(_translate("QtPlayer", "Select Video 2"))
+
+        #trim ui
+        self.trimVideoSelect.setText(_translate("MainWindow", "Select Video"))
+        self.startTrimming.setText(_translate("MainWindow", "Start Trimming"))
+        self.selectStartVideo.setText(_translate("MainWindow", "Select Start"))
+        self.selectEndVideo.setText(_translate("MainWindow", "Select End"))
+        self.startTrimlabel.setText(_translate("MainWindow", "Start"))
+        self.endTrimlabel.setText(_translate("MainWindow", "End"))
+        self.playTrim.setText(_translate("MainWindow", "Play"))
 
 
 class VideoThread(QThread, Ui_QtPlayer):
@@ -603,13 +1006,11 @@ class LiveVideoThread(QThread, Ui_QtPlayer):
         self.cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
 
     def run(self):
-        i = 0
         try:
             while self._run_flag and self.isLive:
                 ret, cv_img = self.cap.read()
                 if ret:
                     self.change_pixmap.emit(cv_img)
-                    i+=1
                 if self.isRecord:
                     self.out.write(cv_img)
             self.cap.release()
@@ -621,6 +1022,80 @@ class LiveVideoThread(QThread, Ui_QtPlayer):
         """Sets run flag to False and waits for thread to finish"""
         self._run_flag = False
         self.wait()
+
+
+class TrimVideoThread(QThread, Ui_QtPlayer):
+    change_pixmap_trim = pyqtSignal(np.ndarray)
+
+    def __init__(self, trimFileName):
+        super().__init__()
+        self._run_flag = True
+        self.isPlay = False
+        self.trimFileName = trimFileName
+        self.frameId = 0
+        self.cap = cv2.VideoCapture(self.trimFileName)
+        self.fps = self.cap.get(cv2.CAP_PROP_FPS)
+        self.frameCount = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        self.endFrame = self.frameCount-1
+        self.startTrimFrame = 0
+        self.startFrame = 0
+        self.endTrimFrame = self.endFrame
+        self.secsDuration = self.frameCount/self.fps
+        self.framePosUpdated = False
+        self.isTrim = False
+        self.out = None
+        self.fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+        self.cv_img = None
+
+        print('fps = ' + str(self.fps))
+        print('Number of frames = ' + str(self.frameCount))
+        secs = self.secsDuration
+        self.duration = time.strftime('%H:%M:%S', time.gmtime(secs))
+        print("Duration (H:M:S) = ", self.duration)
+        print("Wait Key Value",int(1000/self.fps))
+
+    def run(self):
+        trimStarted = True
+        self.frameId = self.startTrimFrame
+        ret, self.cv_img = self.cap.read()
+        self.cap.set(cv2.CAP_PROP_POS_FRAMES, self.frameId)
+        self.change_pixmap_trim.emit(self.cv_img)
+        print(self.cv_img.shape)
+        while self._run_flag:
+            if self.isTrim and trimStarted:
+                self.cap.set(cv2.CAP_PROP_POS_FRAMES, self.startTrimFrame)
+                print("STarted")
+                self.frameId = self.startTrimFrame
+                trimStarted = False
+                print(self.endTrimFrame)
+            if self.isTrim and self.frameId<=self.endTrimFrame:
+                ret, self.cv_img = self.cap.read()
+                if ret:
+                    self.change_pixmap_trim.emit(self.cv_img)
+                    self.out.write(self.cv_img)
+                    print(self.frameId)
+                    self.frameId+=1
+            if self.frameId>=self.endTrimFrame:
+                break
+
+            if self.isPlay or self.framePosUpdated and not self.isTrim:
+                if self.framePosUpdated:
+                    self.cap.set(cv2.CAP_PROP_POS_FRAMES, self.frameId)
+                    self.framePosUpdated=False    
+                ret, self.cv_img = self.cap.read()
+                if ret  and not self.isTrim:
+                    self.change_pixmap_trim.emit(self.cv_img)
+                    self.frameId+=1
+                    cv2.waitKey(int(1000/self.fps))
+        print("Done")
+        self.out.release()
+        self.cap.release()
+        
+ 
+    def stop(self):
+        """Sets run flag to False and waits for thread to finish"""
+        self._run_flag = False
+        self.exit()
 
 
 if __name__ == "__main__":
